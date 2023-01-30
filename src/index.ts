@@ -3,48 +3,57 @@ import puppeteer, {Page, Target, Frame} from "puppeteer"
 (async ()=>{
     const browser = await puppeteer.launch({headless:false, defaultViewport: null});
 
-    browser.pages().then(pages=>{
-        pages.forEach(registListener)
-    })
-
-    browser.on('targetcreated',(target:Target)=>{
-        target?.page().then(page=>{
-            registListener(page)
-        })
-    })
-
-    const evaluate = (frame:Frame) =>{
-        frame.waitForFunction('typeof NetFunnel !== "undefined"', {polling: 'mutation', timeout: 10000})
+    function evaluate(frame:Frame) {
+        frame.waitForFunction('typeof NetFunnel !== "undefined"', {polling: 'mutation', timeout: 1000})
         .then(()=>{
             frame.evaluate(()=>{
                 window['NetFunnel'].TS_BYPASS = true;
                 console.log("Successfully bypassed NetFunnel")
             })
-        }).catch(console.log)
+        }).catch(()=>{})
+        
+        frame.waitForFunction('typeof Jconfirm !== "undefined"', {polling: 'mutation', timeout: 1000})
+        .then(()=>{
+            frame.evaluate(()=>{
+                window['Jconfirm'].prototype.isOpen = ()=>true;
+                console.log("Disabled notice popup")
+            })
+        }).catch(()=>{})
     }
-
-    const registListener = (page:Page)=>{
-        if (!page) return
-
+    
+    function registListener(page:Page){        
         page.setRequestInterception(true).then(()=>{
             page.on('request', req=>{
-                if (req.resourceType() === 'document' && req.url().includes('sugang.korea')) {
-                    page.setCookie({name: 'popNotice', value: 'Y', domain: 'sugang.korea.ac.kr'})
-                }
-                if (req.resourceType() === 'script' && req.url().includes('duplicate')) req.respond({
+                if (req.resourceType() === 'script' && req.url().includes('duplicate')) 
+                req.respond({
                     status: 200,
                     contentType: 'application/x-javascript',
                     body: bypassDup
                 })
                 else req.continue()
             })
-        })
 
+            page.on('dialog', event=>{
+                if (['alert', 'confirm'].includes(event.type()))
+                    event.accept()
+            })
+        })
+        
         page.on('load', ev=>{
             page.frames().forEach(evaluate)
         })
     }
-    browser.pages().then(p=>{p[0].goto("https://sugang.korea.ac.kr")})
+    
+    browser.on('targetcreated',(target:Target)=>{
+        if (target.type() == 'page')
+            target.page().then(registListener)
+    })
+
+    const pages = await browser.pages()
+    pages.forEach(registListener)
+    pages[0].setCookie({name: 'popNotice', value: 'Y', domain: 'sugang.korea.ac.kr'})
+    pages[0].goto("https://sugang.korea.ac.kr")
+
 })()
 
 const bypassDup = `(function ($) {

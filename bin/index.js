@@ -15,31 +15,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const puppeteer_1 = __importDefault(require("puppeteer"));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer_1.default.launch({ headless: false, defaultViewport: null });
-    browser.pages().then(pages => {
-        pages.forEach(registListener);
-    });
-    browser.on('targetcreated', (target) => {
-        target === null || target === void 0 ? void 0 : target.page().then(page => {
-            registListener(page);
-        });
-    });
-    const evaluate = (frame) => {
-        frame.waitForFunction('typeof NetFunnel !== "undefined"', { polling: 'mutation', timeout: 10000 })
+    function evaluate(frame) {
+        frame.waitForFunction('typeof NetFunnel !== "undefined"', { polling: 'mutation', timeout: 1000 })
             .then(() => {
             frame.evaluate(() => {
                 window['NetFunnel'].TS_BYPASS = true;
                 console.log("Successfully bypassed NetFunnel");
             });
-        }).catch(console.log);
-    };
-    const registListener = (page) => {
-        if (!page)
-            return;
+        }).catch(() => { });
+        frame.waitForFunction('typeof Jconfirm !== "undefined"', { polling: 'mutation', timeout: 1000 })
+            .then(() => {
+            frame.evaluate(() => {
+                window['Jconfirm'].prototype.isOpen = () => true;
+                console.log("Disabled notice popup");
+            });
+        }).catch(() => { });
+    }
+    function registListener(page) {
         page.setRequestInterception(true).then(() => {
             page.on('request', req => {
-                if (req.resourceType() === 'document' && req.url().includes('sugang.korea')) {
-                    page.setCookie({ name: 'popNotice', value: 'Y', domain: 'sugang.korea.ac.kr' });
-                }
                 if (req.resourceType() === 'script' && req.url().includes('duplicate'))
                     req.respond({
                         status: 200,
@@ -49,12 +43,23 @@ const puppeteer_1 = __importDefault(require("puppeteer"));
                 else
                     req.continue();
             });
+            page.on('dialog', event => {
+                if (['alert', 'confirm'].includes(event.type()))
+                    event.accept();
+            });
         });
         page.on('load', ev => {
             page.frames().forEach(evaluate);
         });
-    };
-    browser.pages().then(p => { p[0].goto("https://sugang.korea.ac.kr"); });
+    }
+    browser.on('targetcreated', (target) => {
+        if (target.type() == 'page')
+            target.page().then(registListener);
+    });
+    const pages = yield browser.pages();
+    pages.forEach(registListener);
+    pages[0].setCookie({ name: 'popNotice', value: 'Y', domain: 'sugang.korea.ac.kr' });
+    pages[0].goto("https://sugang.korea.ac.kr");
 }))();
 const bypassDup = `(function ($) {
     $.fn.DuplicateWindow = function () {

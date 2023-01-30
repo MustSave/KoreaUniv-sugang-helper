@@ -3,7 +3,7 @@
 
 # Features
 * **NetFunnel 우회**  
-* **다중탭 허용**
+* **다중탭 허용 (실패시 close 누르지 않고 새로고침 필요)**
 
 # Dependency
 Nodejs
