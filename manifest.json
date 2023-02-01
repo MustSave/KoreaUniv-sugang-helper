@@ -13,7 +13,7 @@
     "permissions": [
         "webRequestBlocking",
         "webRequest",
-        "*://*.korea.ac.kr/*",
+        "*://*.sugang.korea.ac.kr/*",
         "tabs"
     ],
     "background": {
