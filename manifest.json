@@ -1,0 +1,22 @@
+{
+    "name": "KoreaUniv Sugang Helper",
+    "version": "1.0.0",
+    "description": "고려대학교 수강신청 도우미",
+    "manifest_version": 2,
+    "browser_action": {
+        "default_icon" : "icons/off.png",
+        "default_title": "헬퍼 쉬는중"
+    },
+    "web_accessible_resources": [
+        "resources/*"
+    ],
+    "permissions": [
+        "webRequestBlocking",
+        "webRequest",
+        "*://*.korea.ac.kr/*",
+        "tabs"
+    ],
+    "background": {
+        "scripts": ["scripts/background.js"]
+    }
+}
