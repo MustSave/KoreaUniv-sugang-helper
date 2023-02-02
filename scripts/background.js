@@ -3,8 +3,8 @@ let toggle = !hasListener(gateway);
 init()
 
 async function init(){
-    netfunnel = btoa(unescape(encodeURIComponent(await (await fetch(chrome.runtime.getURL('./resources/netfunnel.js'))).text())))
-    duplicate = btoa(unescape(encodeURIComponent(await (await fetch(chrome.runtime.getURL('./resources/duplicate.js'))).text())))
+    netfunnel = await (await fetch(chrome.runtime.getURL('./resources/netfunnel.js'))).text()
+    duplicate = await (await fetch(chrome.runtime.getURL('./resources/duplicate.js'))).text()
     setView()
     chrome.browserAction.onClicked.addListener(function(tab) {
         toggle = hasListener(gateway);
